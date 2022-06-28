@@ -1,0 +1,189 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="X-UA-Compatible" content="IE=Edge" />
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Using The Verilog ‘95 Code Generator &#8212; Icarus Verilog  documentation</title>
+    <link rel="stylesheet" href="../_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="../_static/pygments.css" type="text/css" />
+    <script type="text/javascript" id="documentation_options" data-url_root="../" src="../_static/documentation_options.js"></script>
+    <script type="text/javascript" src="../_static/jquery.js"></script>
+    <script type="text/javascript" src="../_static/underscore.js"></script>
+    <script type="text/javascript" src="../_static/doctools.js"></script>
+    <script type="text/javascript" src="../_static/language_data.js"></script>
+    <link rel="index" title="Index" href="../genindex.html" />
+    <link rel="search" title="Search" href="../search.html" />
+    <link rel="next" title="Using the PCB code generator" href="pcb.html" />
+    <link rel="prev" title="The VHDL Code Generator (-tvhdl)" href="vhdl.html" />
+   
+  <link rel="stylesheet" href="../_static/custom.css" type="text/css" />
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head><body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="using-the-verilog-95-code-generator">
+<h1>Using The Verilog ‘95 Code Generator<a class="headerlink" href="#using-the-verilog-95-code-generator" title="Permalink to this headline">¶</a></h1>
+<p>Icarus Verilog contains a code generator to emit 1995 compliant Verilog from
+the input Verilog netlist. This allows Icarus Verilog to function as a Verilog
+&gt; 1995 to Verilog 1995 translator. The main goal of the project was to convert
+&#64;*, ANSI style arguments and other constructs to something allowed in 1995
+Verilog.</p>
+<div class="section" id="invocation">
+<h2>Invocation<a class="headerlink" href="#invocation" title="Permalink to this headline">¶</a></h2>
+<p>To translate a Verilog program to 1995 compliant Verilog, invoke “iverilog”
+with the -tvlog95 flag:</p>
+<div class="highlight-default notranslate"><div class="highlight"><pre><span></span><span class="o">%</span> <span class="n">iverilog</span> <span class="o">-</span><span class="n">tvlog95</span> <span class="o">-</span><span class="n">o</span> <span class="n">my_design_95</span><span class="o">.</span><span class="n">v</span> <span class="n">my_design</span><span class="o">.</span><span class="n">v</span>
+</pre></div>
+</div>
+<p>The generated Verilog will be placed in a single file (a.out by default), even
+if the input Verilog is spread over multiple files.</p>
+</div>
+<div class="section" id="generator-flags">
+<h2>Generator Flags<a class="headerlink" href="#generator-flags" title="Permalink to this headline">¶</a></h2>
+<ul>
+<li><p class="first">-pspacing=N</p>
+<p>Set the indent spacing (the default is 2).</p>
+</li>
+<li><p class="first">-pallowsigned=1</p>
+<p>Allow emitting the various signed constructs as an extension to 1995 Verilog
+(off by default).</p>
+</li>
+<li><p class="first">-pfileline=1</p>
+<p>Emit the original file and line information as a comment for each generated
+line (off by default).</p>
+</li>
+</ul>
+</div>
+<div class="section" id="structures-that-cannot-be-converted-to-1995-compatible-verilog">
+<h2>Structures that cannot be converted to 1995 compatible Verilog<a class="headerlink" href="#structures-that-cannot-be-converted-to-1995-compatible-verilog" title="Permalink to this headline">¶</a></h2>
+<p>The following Verilog constructs are not translatable to 1995 compatible Verilog:</p>
+<ul class="simple">
+<li>Automatic tasks or functions.</li>
+<li>The power operator (**). Expressions of the form (2**N)**&lt;variable&gt; (where N
+is a constant) can be converter to a shift.</li>
+<li>Some System Verilog constructs (e.g. final blocks, ++/– operators,
+etc.). 2-state variables are converted to 4-state variables.</li>
+</ul>
+<p>Icarus extensions that cannot be translated:</p>
+<ul class="simple">
+<li>Integer constants greater than 32 bits.</li>
+<li>Real valued nets.</li>
+<li>Real modulus.</li>
+<li>Most Verilog-A constructs.</li>
+</ul>
+</div>
+<div class="section" id="known-issues-and-limitations">
+<h2>Known Issues and Limitations<a class="headerlink" href="#known-issues-and-limitations" title="Permalink to this headline">¶</a></h2>
+<p>Some things are just not finished and should generate an appropriate
+warning. Here is a list of the major things that still need to be looked at.</p>
+<ul class="simple">
+<li>There are still a few module instantiation port issues (pr1723367 and
+partselsynth).</li>
+<li>inout ports are not converted (tran-VP).</li>
+<li>Variable selects of a non-zero based vector in a continuous assignment are
+not converted.</li>
+<li>There is no support for translating a zero repeat in a continuous
+assignment. It is currently just dropped.</li>
+<li>A pull device connected to a signal select is not translated correctly (this
+may be fixed).</li>
+<li>L-value indexed part selects with a constant undefined base in a continuous
+assignment are not translated.</li>
+<li>Logic gates are not arrayed exactly the same as the input and the instance
+name is not always the same.</li>
+<li>The signed support does not generate $signed() or $unsigned() function calls
+in a continuous assignment expression.</li>
+<li>The special power operator cases are not converted in a continuous
+assignment.</li>
+<li>Currently a signed constant that sets the MSB in an unsigned context will be
+displayed as a negative value (e.g. bit = 1 translates to bit = -1).</li>
+<li>Can net arrays, etc. be unrolled?</li>
+<li>Can generate blocks be converted?</li>
+</ul>
+</div>
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper">
+<h1 class="logo"><a href="../index.html">Icarus Verilog</a></h1>
+
+
+
+
+
+
+
+
+<h3>Navigation</h3>
+<p class="caption"><span class="caption-text">Contents:</span></p>
+<ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../usage/index.html">Icarus Verilog Usage</a></li>
+<li class="toctree-l1 current"><a class="reference internal" href="index.html">The Icarus Verilog Targets</a><ul class="current">
+<li class="toctree-l2"><a class="reference internal" href="vvp.html">The vvp Code Generator (-tvvp)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="stub.html">The stub Code Generator (-tstub)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="null.html">The null Code Generator (-tnull)</a></li>
+<li class="toctree-l2"><a class="reference internal" href="vhdl.html">The VHDL Code Generator (-tvhdl)</a></li>
+<li class="toctree-l2 current"><a class="current reference internal" href="#">Using The Verilog ‘95 Code Generator</a></li>
+<li class="toctree-l2"><a class="reference internal" href="pcb.html">Using the PCB code generator</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="../developer/index.html">Icarus Verilog Developer Support</a></li>
+</ul>
+
+<div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="../index.html">Documentation overview</a><ul>
+  <li><a href="index.html">The Icarus Verilog Targets</a><ul>
+      <li>Previous: <a href="vhdl.html" title="previous chapter">The VHDL Code Generator (-tvhdl)</a></li>
+      <li>Next: <a href="pcb.html" title="next chapter">Using the PCB code generator</a></li>
+  </ul></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <div class="searchformwrapper">
+    <form class="search" action="../search.html" method="get">
+      <input type="text" name="q" />
+      <input type="submit" value="Go" />
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+    </div>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2022, Stephen Williams.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.8.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.8</a>
+      
+      |
+      <a href="../_sources/targets/verilog95.rst.txt"
+          rel="nofollow">Page source</a>
+    </div>
+
+    
+
+    
+  </body>
+</html>
