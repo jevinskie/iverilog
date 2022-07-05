@@ -65,7 +65,7 @@ static PLI_INT32 test_next_calltf(PLI_BYTE8 *name)
       assert(argv);
 
       for (value = vpi_scan(argv) ;  value ;  value = vpi_scan(argv)) {
-	    s_cb_data cb;
+	    s_cb_data cb = {0};
 	    cb.reason = cbNextSimTime;
 	    cb.cb_rtn = next_sim_time_callback;
 	    cb.user_data = (char*)value;
