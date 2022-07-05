@@ -20,29 +20,30 @@
 # include  "vpi_user.h"
 # include  <assert.h>
 
+#if defined(TEST_SCALED) || defined(TEST_SUPPRESS)
+#if defined(TEST_SCALED)
+#define TIME_TYPE vpiScaledRealTime
+#elif defined(TEST_SUPPRESS)
+#define TIME_TYPE vpiSuppressTime
+#endif
+static s_vpi_time cb_timerec = {TIME_TYPE, 0, 0, 0};
+#endif
 
-static s_vpi_time cb_timerec = {vpiSimTime, 0, 0, 0};
-
-static PLI_INT32 register_nextsimtime(struct t_cb_data* cb);
-
-static PLI_INT32 nextsimtime_cb(struct t_cb_data* cb) {
-      uint64_t nextsimtime = ((uint64_t)cb->time->high << 32) | cb->time->low;
-      s_vpi_time timerec;
-      timerec.type = vpiSimTime;
-      vpi_get_time(NULL, &timerec);
-      uint64_t time = ((uint64_t)timerec.high << 32) | timerec.low;
-      vpi_printf("nextsimtime: %" PLI_UINT64_FMT " vpi_get_time: %" PLI_UINT64_FMT "\n",
-            nextsimtime, time);
-      register_nextsimtime(NULL);
+static PLI_INT32 dummy_cb(struct t_cb_data* cb) {
+      (void)cb; /* unused */
       return 0;
 }
 
 static PLI_INT32 register_nextsimtime(struct t_cb_data* cb) {
       (void)cb; /* unused */
       s_cb_data cb_data;
+#if defined(TEST_SCALED) || defined(TEST_SUPPRESS)
       cb_data.time   = &cb_timerec;
+#elif defined(TEST_NULL)
+      cb_data.time   = NULL;
+#endif
       cb_data.reason = cbNextSimTime;
-      cb_data.cb_rtn = nextsimtime_cb;
+      cb_data.cb_rtn = dummy_cb;
       vpiHandle hndl = NULL;
       assert((hndl = vpi_register_cb(&cb_data)) && vpi_free_object(hndl));
       return 0;
